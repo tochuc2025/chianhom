@@ -1,0 +1,29 @@
+body {
+    background-color: #f8f9fa;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+.container {
+    width: 90%;
+    max-width: 700px;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+/*đường viền cho các khung nhập và ô chọn*/
+.form-control, .form-check-input {
+    border: 1px solid #000;
+}
+
+
+@media (max-width: 768px) {
+    .container {
+    width: 100%;
+    }
+}
