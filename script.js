@@ -1,10 +1,21 @@
-// Hàm này sẽ được gọi khi trang được tải để thêm sự kiện cho các ô nhập liệu số học sinh và số nhóm.
+// Hàm thêm sự kiện "Enter" để di chuyển giữa các ô nhập
 function themSuKienFocus() {
-    // Thêm sự kiện keydown vào các ô nhập liệu số lượng học sinh và số nhóm
     document.getElementById("soHS").addEventListener('keydown', focusNextInput);
     document.getElementById("soNhom").addEventListener('keydown', focusNextInput);
 }
 
+// Chuyển focus khi nhấn Enter
+function focusNextInput(event) {
+    if (event.key === 'Enter') {
+        let inputs = document.querySelectorAll('#soHS, #soNhom, .soHSNhom');
+        let index = Array.from(inputs).indexOf(event.target);
+        if (index < inputs.length - 1) {
+            inputs[index + 1].focus();
+        }
+    }
+}
+
+// Hiển thị ô nhập số HS cho từng nhóm nếu chọn "Tự chia"
 function hienThiNhapSoHS() {
     let container = document.getElementById("nhapSoHSContainer");
     container.innerHTML = "";
@@ -19,60 +30,35 @@ function hienThiNhapSoHS() {
             input.type = "number";
             input.className = "soHSNhom form-control mb-2";
             input.required = true;
-            input.min = "1"; // Đảm bảo số nhập vào >= 1
+            input.min = "1"; 
             container.appendChild(label);
             container.appendChild(input);
-            container.appendChild(document.createElement("br"));
         }
 
-        // Thêm sự kiện keydown vào các ô nhập liệu nhóm
         document.querySelectorAll('.soHSNhom').forEach(input => {
             input.addEventListener('keydown', focusNextInput);
         });
     }
 }
 
-function focusNextInput(event) {
-    if (event.key === 'Enter') {
-        // Nếu đang ở ô nhập liệu số học sinh hoặc số nhóm, chuyển focus đến ô tiếp theo (nếu có)
-        let inputs = document.querySelectorAll('#soHS, #soNhom, .soHSNhom');
-        let index = Array.from(inputs).indexOf(event.target); // Tìm chỉ mục của ô nhập liệu hiện tại
-        if (index < inputs.length - 1) {
-            inputs[index + 1].focus(); // Chuyển focus đến ô nhập liệu tiếp theo
-        }
-    }
-}
-
-// Gọi hàm themSuKienFocus khi trang được tải
-window.onload = themSuKienFocus;
-
-
+// Hàm chia nhóm
 function chiaNhom() {
     let soHS = document.getElementById("soHS");
     let soNhom = document.getElementById("soNhom");
     let danhSachHS = document.getElementById("danhSachHS");
     let radioTen = document.getElementById("radioTen");
-    let chon1 = document.querySelector('input[name="chiaTheo"]:checked').value;
-    let chon2 = document.querySelector('input[name="chiaKieu"]:checked').value;
 
-    // Kiểm tra số lượng học sinh không nhỏ hơn 1
     if (parseInt(soHS.value) < 1) {
         alert("Số lượng học sinh phải lớn hơn hoặc bằng 1!");
         return;
     }
 
-    // Kiểm tra số nhóm không nhỏ hơn 1 và không lớn hơn số học sinh
     let soNhomValue = parseInt(soNhom.value);
-    if (soNhomValue < 1) {
-        alert("Số nhóm phải lớn hơn hoặc bằng 1!");
-        return;
-    }
-    if (soNhomValue > parseInt(soHS.value)) {
-        alert("Số nhóm không thể lớn hơn số lượng học sinh!");
+    if (soNhomValue < 1 || soNhomValue > parseInt(soHS.value)) {
+        alert("Số nhóm phải hợp lệ (>= 1 và <= số học sinh)!");
         return;
     }
 
-    // Kiểm tra xem các ô nhập liệu đã được điền chưa
     if (!soHS.value || !soNhom.value || (radioTen.checked && !danhSachHS.value.trim())) {
         alert("Vui lòng điền đầy đủ thông tin!");
         return;
@@ -82,23 +68,21 @@ function chiaNhom() {
     let sl_nhom = parseInt(soNhom.value);
     let dsHS = [];
 
-    if (chon1 === "stt") {
+    if (document.querySelector('input[name="chiaTheo"]:checked').value === "stt") {
         for (let i = 1; i <= hs; i++) dsHS.push(i);
     } else {
-        let tenHS = danhSachHS.value.split("\n");
-        dsHS = tenHS.map(ten => ten.trim()).filter(ten => ten !== "");
-
-        // Kiểm tra số lượng tên nhập vào
-        if (dsHS.length !== hs) {
-            alert("Số lượng tên học sinh không khớp với số học sinh ban đầu!");
+        let tenHS = danhSachHS.value.split("\n").map(ten => ten.trim()).filter(ten => ten !== "");
+        if (tenHS.length !== hs) {
+            alert("Số lượng tên học sinh không khớp với số nhập vào!");
             return;
         }
+        dsHS = tenHS;
     }
 
     let sohsmn = [];
     let total = 0;
 
-    if (chon2 === "tuDong") {
+    if (document.querySelector('input[name="chiaKieu"]:checked').value === "tuDong") {
         let x = hs, y = sl_nhom;
         for (let i = 0; i < sl_nhom; i++) {
             let z = x % y;
@@ -112,28 +96,55 @@ function chiaNhom() {
         inputs.forEach((input, index) => {
             let nhomSize = parseInt(input.value) || 0;
             if (nhomSize < 1) {
-                alert(`Số lượng học sinh trong nhóm ${index + 1} phải lớn hơn hoặc bằng 1!`);
+                alert(`Số lượng học sinh trong nhóm ${index + 1} phải >= 1!`);
                 return;
             }
             sohsmn.push(nhomSize);
             total += nhomSize;
         });
 
-        // Kiểm tra nếu tổng số học sinh nhập vào không khớp với tổng số học sinh ban đầu
         if (total !== hs) {
-            alert("Tổng số học sinh các nhóm không khớp với số học sinh ban đầu!");
+            alert("Tổng số học sinh các nhóm không khớp!");
             return;
         }
     }
 
     dsHS.sort(() => Math.random() - 0.5);
     let ketQua = "<h3>Kết quả chia nhóm:</h3>";
+
+    window.chiaNhomData = []; // Cập nhật dữ liệu nhóm cho xuất Excel
     let index = 0;
     for (let i = 0; i < sl_nhom; i++) {
-        ketQua += `<p><strong>Nhóm ${i + 1}:</strong> ` + dsHS.slice(index, index + sohsmn[i]).join(", ") + "</p>";
+        let nhom = dsHS.slice(index, index + sohsmn[i]);
+        window.chiaNhomData.push(nhom);
+        ketQua += `<p><strong>Nhóm ${i + 1}:</strong> ${nhom.join(", ")}</p>`;
         index += sohsmn[i];
     }
+
     document.getElementById("ketQua").innerHTML = ketQua;
 }
 
+// Xuất Excel: Mỗi nhóm là một hàng, mỗi thành viên là một ô, không có tiêu đề
+function xuatExcel() {
+    if (!window.chiaNhomData || window.chiaNhomData.length === 0) {
+        alert("Bạn chưa chia nhóm!");
+        return;
+    }
 
+    let data = [];
+    
+    // Duyệt qua từng nhóm, mỗi nhóm sẽ là một hàng trong Excel
+    window.chiaNhomData.forEach((nhom, index) => {
+        let hangNhom = [`Nhóm ${index + 1}`, ...nhom]; 
+        data.push(hangNhom);
+    });
+
+    let ws = XLSX.utils.aoa_to_sheet(data);
+    let wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Danh sách nhóm");
+    XLSX.writeFile(wb, "Danh_sach_nhom.xlsx");
+}
+
+
+// Gọi sự kiện khi trang tải xong
+window.onload = themSuKienFocus;
